@@ -1,0 +1,9 @@
+
+# vim swap file
+.*.sw[mnop]
+*~
+
+# temporary file
+/temp*
+/tmp*
+
