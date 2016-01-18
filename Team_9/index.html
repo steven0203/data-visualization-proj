@@ -20,7 +20,6 @@
 					//google.charts.setOnLoadCallback(queryDrawLine);
 				});
 			});
-			var dataSource='https://docs.google.com/spreadsheets/d/1Ia5fH6eHdQFOnWtjQJtDqRtIp9H0jpKX6qrNCgjFP84/edit?usp=sharing&headers=1&tq=';
 
 			function drawAllSheet()
 			{
@@ -59,23 +58,39 @@
 			
 			function queryDrawLine()
 			{
-				var queryString=encodeURIComponent('SELECT D,B,E WHERE A="'+choiseCancer+'" and F="'+sex+'" and E!=0');
-				var query=new google.visualization.Query(dataSource+queryString);
-				query.send( handleSampleDataQueryResponseLine);
-			}
-
-
-			function handleSampleDataQueryResponseLine(response)
-			{
-				if (response.isError()) {
-				        alert('Error in query: ' + response.getMessage() + ' ' + response.getDetailedMessage());
-						        return;
+				data = [];
+				var header = [];
+				for (var i in universe)
+				{
+					var selected =
+						universe[i][0] == choiseCancer &&
+						universe[i][5] == sex          &&
+						universe[i][4] != 0;
+					if (selected)
+					{
+						var entry = [];
+						entry.push(universe[i][3]);
+						entry.push(universe[i][1]);
+						entry.push(universe[i][4]);
+						data.push(entry);
+					}
 				}
-				var data=response.getDataTable();
-				data.sort({column:0,desc:false});
+				header.push(universe[0][3]);
+				header.push(universe[0][1]);
+				header.push(universe[0][4]);
+				
+				if (data.length == 0) {
+				    alert('queryDrawLine: Error in query');
+					return;
+				}
+				data.sort(function(a, b){
+					return a[0] - b[0];
+				});
+				data.unshift(header);
+				data = google.visualization.arrayToDataTable(data);
+
 				drawLine(data);
 			}
-
 
 
 			function drawBar(data){
