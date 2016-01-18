@@ -1,26 +1,60 @@
 ﻿<html>
 	<head>
   		<meta charset="utf-8" />
+		<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
 		<script type="text/javascript" src="https://www.google.com/jsapi"></script>
 	 	<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
 		<script type="text/javascript">
-			
+			var universe;
+			var data;
 			var year=103;
 			var sex="b";
 			var option=0;  //0 is 死亡人口,1 死亡率
 			var choiseCancer;
-			
-
-			google.charts.load('current', {'packages':['bar',"corechart","line"]});
-			google.charts.setOnLoadCallback(drawAllSheet);
-			
-			//google.charts.setOnLoadCallback(queryDrawLine);
+			$(document).ready(function(){
+				var jsonSource = "https://raw.githubusercontent.com/alienbubblet/data-visualization-proj/devl/Team_9/data.json";
+				$.getJSON(jsonSource, function(json){
+					universe = json;
+					google.charts.load('current', {'packages':['bar',"corechart","line"]});
+					google.charts.setOnLoadCallback(drawAllSheet);	
+					//google.charts.setOnLoadCallback(queryDrawLine);
+				});
+			});
 			var dataSource='https://docs.google.com/spreadsheets/d/1Ia5fH6eHdQFOnWtjQJtDqRtIp9H0jpKX6qrNCgjFP84/edit?usp=sharing&headers=1&tq=';
+
 			function drawAllSheet()
 			{
-				var queryString=encodeURIComponent('SELECT A,B WHERE D='+year+' and F="'+sex+'" and E!=0');
-				var query=new google.visualization.Query(dataSource+queryString);
-				query.send( handleSampleDataQueryResponse);
+				data = [];
+				var header = [];
+				for (var i in universe)
+				{
+					var selected =
+						universe[i][3] == year &&
+						universe[i][5] == sex  &&
+						universe[i][4] != 0;
+					if (selected)
+					{
+						var entry = [];
+						entry.push(universe[i][0]);
+						entry.push(universe[i][1]);
+						data.push(entry);
+					}
+				}
+				header.push(universe[0][0]);
+				header.push(universe[0][1]);
+				
+				if (data.length == 0) {
+				    alert('drawAllSheet: Error in query');
+					return;
+				}
+				data.sort(function(a, b){
+					return b[1]-a[1];
+				});
+				data.unshift(header);
+				data = google.visualization.arrayToDataTable(data);
+
+				drawBar(data);
+				drawPie(data);
 			}
 			
 			function queryDrawLine()
@@ -43,17 +77,6 @@
 			}
 
 
-			function handleSampleDataQueryResponse(response)
-			{
-				if (response.isError()) {
-				        alert('Error in query: ' + response.getMessage() + ' ' + response.getDetailedMessage());
-						        return;
-				}
-				var data=response.getDataTable();
-				data.sort({column:1,desc:true});
-				drawBar(data);
-				drawPie(data);
-			}
 
 			function drawBar(data){
 				var word;
